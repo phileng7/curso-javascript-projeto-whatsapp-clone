@@ -16136,3 +16136,8 @@ html[dir=rtl] ._2ICcy:after{
 #main {
     display:none;
 }
+#picture-camera {
+    height: 100%;
+    width: auto;
+    text-align: center;
+}
