@@ -1,5 +1,5 @@
 export class ClassEvent {
-    constructor() {
+    constructor() {        
         this._events = {};        
     }
 
@@ -11,6 +11,7 @@ export class ClassEvent {
     trigger(){
         let args = [...arguments];
         let eventName = args.shift();
+        args.push(new Event(eventName));
         if (this._events[eventName] instanceof Array) {
             this._events[eventName].forEach(fn => {
                 fn.apply(null, args); //executa o codigo
