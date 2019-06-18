@@ -3,6 +3,7 @@ import { CameraController } from './CameraController';
 import { DocumentPreviewController } from './DocumentPreviewController';
 import { MicrofoneController } from './MicrofoneController';
 import { Firebase } from '../util/Firebase';
+import { User } from '../model/User';
 
 export class WhatsAppController {
   constructor() {
@@ -17,12 +18,34 @@ export class WhatsAppController {
   initAuth(){
     this._firebase.initAuth()
       .then(response=>{
-        this._user = response.user;
-        this.el.appContent.css({
-          display: 'flex'
+        //this._user = response.user;
+        this._user = new User(response.user.email);   
+        this._user.on('datachange', data => {
+          console.log('Data Change...');
+          document.querySelector('title').innerHTML = data.name + ' - WhatsApp Clone'
+          this.el.inputNamePanelEditProfile.innerHTML = data.name;
+          if (data.photo) {
+            let photo = this.el.imgPanelEditProfile;
+            photo.src = data.photo;
+            photo.show();
+            this.el.imgDefaultPanelEditProfile.hide();
+            let photo2 = this.el.myPhoto.querySelector('img');
+            photo2.src = data.photo;
+            photo2.show();
+          }
         });
+
+        this._user.name = response.user.displayName;
+        this._user.email = response.user.email;
+        this._user.photo = response.user.photoURL; 
+
+        this._user.save().then(() =>{
+          this.el.appContent.css({
+            display: 'flex'
+          }); 
+        })              
       })
-      .catch(err=>{
+      .catch(err => {
         console.error(err);
       });
   }
@@ -66,12 +89,38 @@ export class WhatsAppController {
 
     this.el.btnSavePanelEditProfile.on('click', e=> {
       console.log(this.el.inputNamePanelEditProfile.innerHTML);
+      this.el.btnSavePanelEditProfile.disabled = true;
+      this._user.name = this.el.inputNamePanelEditProfile.innerHTML;
+      //Enviar para o Firebase
+      console.log(this._user.name);
+      this._user.save().then(()=>{
+        this.el.btnSavePanelEditProfile.disabled = false;
+      }).catch(err => {
+        console.error(err);
+        this.el.btnSavePanelEditProfile.disabled = false;
+      });
     });
 
     //evento de quando o form for enviado-listener
     this.el.formPanelAddContact.on('submit', e=> {
       e.preventDefault();   //cancela o comportamento default, sem refresh
       let formData = new FormData(this.el.formPanelAddContact);
+      let contact = new User(formData.get('email'));
+      console.log('contact:' + JSON.stringify(contact));
+      console.log('contact:' + contact.email);
+      let frmemail = app.el.formPanelAddContact.getForm().get('email');
+      console.log('frmemail:' + frmemail);      
+      contact.on('datachange', data=>{
+        if (data.name){
+          this._user.addContact(contact).then(()=>{
+            this.el.btnClosePanelAddContact.click();
+            console.info('Contato foi adicionado!');
+          });
+        } else{
+          console.error('Usuario nao foi encontrado')
+        }
+      });
+      this._user.addContact();
     });
 
     this.el.contactsMessagesList.querySelectorAll('.contact-item').forEach(item => {
@@ -390,7 +439,7 @@ export class WhatsAppController {
     }
 
     HTMLFormElement.prototype.toJSON = function () {
-      let json ={}
+      let json ={};
       this.getForm().forEach((value,key) => {
         json[key] = value;
       });

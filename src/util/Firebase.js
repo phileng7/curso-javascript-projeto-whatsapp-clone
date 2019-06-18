@@ -16,14 +16,14 @@ export class Firebase {
     }
 
     init(){
-        if (!this._initialized) {
+        if (!window._initializedFirebase) {
             // Initialize Firebase
             firebase.initializeApp(this.init._config);
             //monitorar
             firebase.firestore().settings({
                 timestampsInSnapshots: true
             });
-            this._initialized = true;
+            window._initializedFirebase = true;
         }         
     }
 
