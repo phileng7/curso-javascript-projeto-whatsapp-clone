@@ -108,7 +108,7 @@ export class WhatsAppController {
       let contact = new User(formData.get('email'));
       console.log('contact:' + JSON.stringify(contact));
       console.log('contact:' + contact.email);
-      let frmemail = app.el.formPanelAddContact.getForm().get('email');
+      let frmemail = this.el.formPanelAddContact.getForm().get('email');
       console.log('frmemail:' + frmemail);      
       contact.on('datachange', data=>{
         if (data.name){
